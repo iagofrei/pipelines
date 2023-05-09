@@ -10,8 +10,7 @@ admin_client = KafkaAdminClient(bootstrap_servers=bootstrap_servers)
 topic_list = [NewTopic(name='transactions', num_partitions=1, replication_factor=3),
               NewTopic(name='fraud_detection', num_partitions=1, replication_factor=3),
               NewTopic(name='technical_validation', num_partitions=1, replication_factor=3),
-              NewTopic(name='authorizations', num_partitions=1, replication_factor=3),
-              NewTopic(name='enrichment', num_partitions=1, replication_factor=3)]
+              NewTopic(name='authorizations', num_partitions=1, replication_factor=3)]
 
 
 # Cria os tópicos

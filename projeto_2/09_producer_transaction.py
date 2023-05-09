@@ -10,6 +10,29 @@ import datetime as dt
 # Instanciando o gerador de dados falsos
 fake = Faker()
 
+# Configura os brokers
+bootstrap_servers = ['localhost:9092', 'localhost:9093', 'localhost:9094']
+
+# Cria o produtor
+producer = KafkaProducer(
+    bootstrap_servers=bootstrap_servers,
+    value_serializer=lambda x: x.encode('utf-8'),
+    key_serializer=lambda x: x.encode('utf-8'),
+)
+
+# Lista de tópicos e partições
+topic_partitions = [
+    {'topic': 'transactions', 'partitions': 1}
+]
+
+# Funções de callback
+def on_send_success(record_metadata):
+    delivery_time = dt.datetime.fromtimestamp(record_metadata.timestamp / 1e3)
+    print(f'Mensagem enviada com sucesso em {delivery_time} para o tópico {record_metadata.topic} na partição {record_metadata.partition} com offset {record_metadata.offset}')
+    print('\n')
+
+def on_send_error(ex):
+    print(f'Erro ao enviar mensagem: {ex}')
 
 # Função para gerar uma transação fictícia
 def generate_transaction():
@@ -26,9 +49,25 @@ def generate_transaction():
 # Função principal para enviar transações para o tópico Kafka
 def main():
     while True:
+
+        # Escolhe o tópico
+        topic = 'transactions'
+        partition_ = 1
+        key_ = f'key_test' #{topic}-partition-{partition_}'
+
         # Gerar uma transação
         transaction = generate_transaction()
         print(transaction)
+
+        # Envia a mensagem para o Kafka
+        future = producer.send(topic, value=transaction, key=key_, partition=partition_) 
+
+        # Espera a confirmação da entrega
+        try:
+            record_metadata = future.get(timeout=10)
+            on_send_success(record_metadata)
+        except Exception as ex:
+            on_send_error(ex)
 
         # Adormecer por um período aleatório de tempo entre 0.5 e 2 segundos
         time.sleep(random.uniform(0.5, 2))
@@ -36,3 +75,7 @@ def main():
 # Certificando-se de que o script é executado apenas quando é o script principal
 if __name__:
     main()
+
+# Encerra o produtor
+producer.flush()
+producer.close()
