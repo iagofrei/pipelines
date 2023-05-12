@@ -32,13 +32,49 @@ for i in range (10_000):
 ## REGRAS DE ENVIO
 ## 1. Todos os eventos são publicados no modo *fanout*.
 
+    if (category=='EVENTO'):
+
+        # Define exchange name and route
+        exchange_name_1 = 'exchange_fanout'
+        route_ = ''
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_1,
+            routing_key=route_,
+            body=message
+        )
+    
 
 
 ## 2. Eventos importantes (prioridade alta) são publicados no modo *direct*, rota *eventos_importantes*.
 
+    if (category=='EVENTO') & (priority == 'ALTA'):
 
+        # Define exchange name and route
+        exchange_name_2 = 'exchange_direct'
+        route_ = 'eventos_importantes'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_2,
+            routing_key=route_,
+            body=message
+        )
 
 ## 3. Todas as movimentações são publicadas no modo *topic*, rota *department.category.priority*.
+
+    if category == 'MOVIMENTACAO':
+        # Define exchange name and route
+        exchange_name_3 = 'exchange_topic'
+        route_ = f'{department.lower()}.{category.lower()}.{priority.lower()}'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_3,
+            routing_key=route_,
+            body=message
+        )    
 
 
     print(f" [x] Sent {message}")

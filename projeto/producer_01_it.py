@@ -2,6 +2,7 @@ import pika
 import datetime as dt
 import time
 import random
+import sys
 
 # Establish a connection with RabbitMQ server
 connection = pika.BlockingConnection(
@@ -30,20 +31,36 @@ for i in range (10_000):
 
 
 ## REGRAS DE ENVIO
-
+    exchange_name_1 = 'exchange_fanout'
+    exchange_name_3 = 'exchange_topic'
 
 ## 1. Todos os logs são publicados no modo *fanout*.
-
+    channel.basic_publish(
+    exchange=exchange_name_1,
+    routing_key='',
+    body=message
+    )
 
 
     
 
 ## 2. Todos erros de alta prioridade em aberto são publicados no modo *topic*, rota *department.category.priority.status*.
 
+    if (priority == 'ALTA') & (status == 'ABERTA'):
+        route_ = f'{department.lower()}.{category.lower()}.{priority.lower()}.{status.lower()}'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_3,
+            routing_key=route_,
+            body=message,
+            properties=pika.BasicProperties(
+                delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
+            )
+        )    
 
     print(f" [x] Sent {message}")
     time.sleep(random.randint(0,3))
-
 
 # Close the connection
 connection.close()

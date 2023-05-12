@@ -10,25 +10,39 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
-    queue_name_ = 'informacoes_criticas'
+    # Declare a queue to consume messages from
+    result = channel.queue_declare(
+        queue='', 
+        exclusive=True
+    )
+
+    # Define exchange and queue name s
+    exchange_name = 'exchange_topic'
+    queue_name = result.method.queue
+
+
+    channel.queue_bind(
+        exchange=exchange_name,
+        queue=queue_name,
+        routing_key='#.alta.#'
+    )
+
+
 
     # Define a callback function to handle incoming messages
     def callback(ch, method, properties, body):
-        
+
         print(f" [x] Received {body}")
         print(f"{method.routing_key}")
-        
-        ch.basic_ack(delivery_tag = method.delivery_tag)
 
-        time.sleep(random.randint(5,10))
+        time.sleep(random.randint(15,30))
         print('[X] Done.')
 
-    # Set up a consumer to receive messages from the queue and pass them to the callback function
-    channel.basic_qos(prefetch_count=1)
 
     channel.basic_consume(
-        queue=queue_name_,
+        queue=queue_name,
         on_message_callback=callback,
+        auto_ack=True
     )
 
     # Start consuming messages from the queue

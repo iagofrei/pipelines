@@ -10,7 +10,7 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
-    queue_name_ = 'informacoes_criticas'
+    queue_name_ = 'participacao_obrigatoria_it'
 
     # Define a callback function to handle incoming messages
     def callback(ch, method, properties, body):
@@ -20,7 +20,7 @@ def main():
         
         ch.basic_ack(delivery_tag = method.delivery_tag)
 
-        time.sleep(random.randint(5,10))
+        time.sleep(random.randint(2,14))
         print('[X] Done.')
 
     # Set up a consumer to receive messages from the queue and pass them to the callback function

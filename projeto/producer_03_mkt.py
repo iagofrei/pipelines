@@ -34,10 +34,32 @@ for i in range (10_000):
 
 ## 1. Eventos importantes (prioridade alta) são publicados no modo *direct*, rota *eventos_importantes*.
 
+    if (category=='EVENTO') & (priority == 'ALTA'):
 
+        # Define exchange name and route
+        exchange_name_2 = 'exchange_direct'
+        route_ = 'eventos_importantes'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_2,
+            routing_key=route_,
+            body=message
+        )
 
 ## 2. Todas as promoções são publicadas no modo *topic*, rota *department.category.priority*.
 
+    if category == 'PROMOCAO':
+        # Define exchange name and route
+        exchange_name_3 = 'exchange_topic'
+        route_ = f'{department.lower()}.{category.lower()}.{priority.lower()}'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_3,
+            routing_key=route_,
+            body=message
+        )    
 
 
     print(f" [x] Sent {message}")

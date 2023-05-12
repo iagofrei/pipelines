@@ -4,10 +4,20 @@ import pika
 connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-exchange_name_ = 'exchange_topic'
-queue_name_ = 'informacoes_criticas'
-routing_key_ = 'it.*.alta.aberta'
+exchange_name_ = 'exchange_direct'
+queue_name_ = 'compras'
 
+
+routing_key_ = 'orcamentos'
+channel.queue_bind(
+            exchange=exchange_name_,
+            queue=queue_name_,
+            routing_key=routing_key_
+        )
+
+
+
+routing_key_ = 'ordens'
 channel.queue_bind(
             exchange=exchange_name_,
             queue=queue_name_,

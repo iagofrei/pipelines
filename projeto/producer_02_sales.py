@@ -33,11 +33,33 @@ for i in range (10_000):
 
 ## 1. Todos orçamentos  são publicados no modo *direct*, rota *orcamentos*.
 
+    if (category=='ORCAMENTO') :
 
+        # Define exchange name and route
+        exchange_name_ = 'exchange_direct'
+        route_ = 'orcamentos'
+
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_,
+            routing_key=route_,
+            body=message
+        )
 
 ## 2. Todas ordens de compra  são publicados no modo *direct*, rota *ordens*.
 
+    if category == 'ORDEM':
+        # Define exchange name and route
+        exchange_name_ = 'exchange_direct'
+        route_ = 'ordens'
 
+        # Publish message
+        channel.basic_publish(
+            exchange=exchange_name_,
+            routing_key=route_,
+            body=message
+        )    
+  
     print(f" [x] Sent {message}")
     time.sleep(random.randint(0,3))
 
