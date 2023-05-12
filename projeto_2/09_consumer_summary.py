@@ -1,47 +1,59 @@
-# Importa a classe KafkaConsumer da biblioteca kafka-python
+# Importando as bibliotecas necessárias
 from kafka import KafkaConsumer, TopicPartition
-import time
+import json
+from config import KAFKA_BROKERS, TOPICS, CLIENTS, PARTITIONS, GROUPS
 
-# Cria uma instância de um consumidor Kafka e configura o endereço do servidor de bootstrap e o nome do tópico a ser consumido
+# Configurando o consumidor Kafka
 consumer = KafkaConsumer(
-    bootstrap_servers=['localhost:9092', 'localhost:9093', 'localhost:9094'],
-    auto_offset_reset='latest',
-    group_id='A'
+    bootstrap_servers=KAFKA_BROKERS,
+    value_deserializer=lambda v: json.loads(v),  # Deserializando os valores recebidos
+    group_id=GROUPS['results_group']  # Definindo o grupo do consumidor
 )
 
-# Atribuir a partição e o offset desejados
-tp = TopicPartition('topic_2', 0)  # partição 0 de 'my_topic'
+# Configurando a partição do tópico
+tp = TopicPartition(TOPICS["authorizations"], 0)
 consumer.assign([tp])
 
-current_offset = consumer.position(tp)
+# Obtendo o offset atual e o offset final
+current_offset = 0 # consumer.position(tp)
 end_offset = consumer.end_offsets([tp])[tp]
 
-consumer.seek(tp, current_offset)  # move para o offset X
+# Buscando o offset atual
+consumer.seek(tp, current_offset)
 
+print("authorization", current_offset, end_offset)
 
-print(f'current_offset: {current_offset} - end_offset: {end_offset}')
+# Definindo a função para contar as transações
+def count_transactions():
+    # Dicionários para armazenar as contagens de transações aprovadas e recusadas
+    approved_counts = {}
+    declined_counts = {}
 
-while True:
-    
-    current_offset = consumer.position(tp)
-    end_offset = consumer.end_offsets([tp])[tp]
+    # Iterando sobre as mensagens no consumidor
+    for message in consumer:
+        # Extraindo o resultado da validação da mensagem
+        validation_result = message.value
+        # Extraindo a marca do cartão da mensagem
+        brand = validation_result['card_brand']
 
-    print(f'current_offset: {current_offset} - end_offset: {end_offset}')
+        # Se a transação for válida, incrementamos a contagem de aprovações
+        if validation_result['valid']:
+            if brand in approved_counts:
+                approved_counts[brand] += 1
+            else:
+                approved_counts[brand] = 1
+        # Se a transação não for válida, incrementamos a contagem de recusos
+        else:
+            if brand in declined_counts:
+                declined_counts[brand] += 1
+            else:
+                declined_counts[brand] = 1
 
-    # Lê as mensagens do Kafka em lotes, com um limite de X mensagens por lote.
-    messages = consumer.poll(max_records=5, timeout_ms=3000)
-    
-    
-    # Itera pelos lotes de mensagens lidos.
-    for tp, msgs in messages.items():
-        print(f'------ Batch limit ------')
+        # Imprimindo a contagem de transações aprovadas e recusadas
+        print(f"Approved transactions: {approved_counts}")
+        print(f"Declined transactions: {declined_counts}")
+        print('\n')
 
-        # Itera pelas mensagens de cada lote.
-        for msg in msgs:
-        
-            print(f"Offset: {msg.offset}, Chave: {msg.key}, Valor: {msg.value.decode('utf-8')}")
-
-            # commita o offset da última mensagem consumida para todas as partições atribuídas
-            consumer.commit()
-    
-    time.sleep(1)
+# Certificando-se de que a função count_transactions() é chamada apenas se este script for executado diretamente
+if __name__ == "__main__":
+    count_transactions()

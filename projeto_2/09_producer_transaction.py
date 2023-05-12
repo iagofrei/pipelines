@@ -6,6 +6,7 @@ import time
 import random
 import uuid
 import datetime as dt
+from config import KAFKA_BROKERS, TOPICS, CLIENTS, PARTITIONS
 
 # Instanciando o gerador de dados falsos
 fake = Faker()
@@ -60,7 +61,7 @@ def main():
         print(transaction)
 
         # Envia a mensagem para o Kafka
-        future = producer.send(topic, value=transaction, key=key_, partition=partition_) 
+        future = producer.send(TOPICS["transactions"], key={"transaction_id": transaction["transaction_id"], "customer_id": transaction["customer_id"], "card_brand": transaction["card_brand"]}, value=transaction)
 
         # Espera a confirmação da entrega
         try:
